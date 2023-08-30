@@ -24,7 +24,7 @@
     <button onclick="startTank()">START</button>
     <button onclick="stopTank()">STOP</button>
   </div>
-  <div id="mqttStatus">MQTT: SIN CONEXIÓN</div> <!-- Agregado: aquí se mostrará el estado de conexión MQTT -->
+  <div id="mqttStatus">MQTT: SIN CONEXIÓN</div>
 </div>
 <script>
 var level = 0;
@@ -36,7 +36,6 @@ function setLevel() {
     document.getElementById("water").style.height = (level / 3) + "%";
     updateLeds();
     
-    // Aquí puedes publicar el nivel en el topic MQTT correspondiente
     var message = level.toString();
     client.publish("DID/LEVEL", message);
   }
@@ -53,39 +52,47 @@ function updateLeds() {
     bottomLed.style.backgroundColor = "red";
     topLed.style.backgroundColor = "green";
   } else {
-    bottomLed.style.backgroundColor = "red"; // Mantener rojo
-    topLed.style.backgroundColor = "red"; // Mantener rojo
+    bottomLed.style.backgroundColor = "red";
+    topLed.style.backgroundColor = "red";
   }
 }
 
 function startTank() {
   // Lógica para iniciar el tanque (si es necesario)
-  
-  // Aquí puedes publicar un mensaje en el topic MQTT "DID/START"
   client.publish("DID/START", "1");
 }
 
 function stopTank() {
   // Lógica para detener el tanque (si es necesario)
-  
-  // Aquí puedes publicar un mensaje en el topic MQTT "DID/STOP"
   client.publish("DID/STOP", "1");
 }
 
-// Configurar la conexión MQTT
-var client = mqtt.connect('mqtt://192.168.68.109'); // Cambia por tu broker MQTT
+var client = mqtt.connect('mqtt://192.168.68.109');
 
 client.on('connect', function () {
   console.log('Connected to MQTT broker');
-  document.getElementById("mqttStatus").textContent = 'MQTT: CONECTADO'; // Agregado: mensaje en la interfaz
+  document.getElementById("mqttStatus").textContent = 'MQTT: CONECTADO';
 });
 
 client.on('error', function (error) {
   console.log('Connection to MQTT broker failed:', error);
-  document.getElementById("mqttStatus").textContent = 'MQTT: SIN CONEXIÓN'; // Agregado: mensaje en la interfaz
+  document.getElementById("mqttStatus").textContent = 'MQTT: SIN CONEXIÓN';
 });
 
+function updateTankLevelAutomatically() {
+  if (level < 300) {
+    level += 10;
+    document.getElementById("water").style.height = (level / 3) + "%";
+    updateLeds();
+    
+    var message = level.toString();
+    client.publish("DID/LEVEL", message);
+  }
+}
+
+setInterval(updateTankLevelAutomatically, 5000);
 </script>
 </body>
 </html>
+
 
