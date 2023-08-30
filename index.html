@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Manual Tank Level</title>
+<link rel="stylesheet" href="css\style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/3.0.0/mqtt.min.js"></script>
+</head>
+<body>
+<div class="scene">
+  <div class="header">
+    <h2>UNIVERSIDAD DE LAS FUERZAS ARMADAS ESPE - SEDE LATACUNGA</h2>
+  </div>
+  <div class="tank-container">
+    <div class="led" id="bottomLed"></div>
+    <div class="tank">
+      <div class="water" id="water"></div>
+    </div>
+    <div class="led" id="topLed"></div>
+  </div>
+  <div class="controls">
+    <label for="levelInput">Enter Tank Level (0-300):</label>
+    <input type="number" id="levelInput" min="0" max="300">
+    <button onclick="setLevel()">Set Level</button>
+    <button onclick="startTank()">START</button>
+    <button onclick="stopTank()">STOP</button>
+  </div>
+  <div id="mqttStatus"></div> <!-- Nuevo elemento para mostrar el estado de MQTT -->
+</div>
+<script>
+var level = 0;
+var mqttConnected = false; // Variable para rastrear el estado de la conexión MQTT
+
+function setLevel() {
+  var newLevel = parseInt(document.getElementById("levelInput").value);
+  if (newLevel >= 0 && newLevel <= 300) {
+    level = newLevel;
+    document.getElementById("water").style.height = (level / 3) + "%";
+    updateLeds();
+    
+    // Aquí puedes publicar el nivel en el topic MQTT correspondiente
+    var message = level.toString();
+    client.publish("DID/LEVEL", message);
+  }
+}
+
+function updateLeds() {
+  var bottomLed = document.getElementById("bottomLed");
+  var topLed = document.getElementById("topLed");
+  
+  if (level === 0) {
+    bottomLed.style.backgroundColor = "green";
+    topLed.style.backgroundColor = "red";
+  } else if (level === 300) {
+    bottomLed.style.backgroundColor = "red";
+    topLed.style.backgroundColor = "green";
+  } else {
+    bottomLed.style.backgroundColor = "red"; // Mantener rojo
+    topLed.style.backgroundColor = "red"; // Mantener rojo
+  }
+}
+
+function updateMqttStatus(status) {
+  var mqttStatusElement = document.getElementById("mqttStatus");
+  if (status) {
+    mqttStatusElement.textContent = "MQTT Connected";
+    mqttStatusElement.style.color = "green";
+  } else {
+    mqttStatusElement.textContent = "MQTT Disconnected";
+    mqttStatusElement.style.color = "red";
+  }
+}
+
+function startTank() {
+  // Lógica para iniciar el tanque (si es necesario)
+  
+  // Aquí puedes publicar un mensaje en el topic MQTT "DID/START"
+  client.publish("DID/START", "1");
+}
+
+function stopTank() {
+  // Lógica para detener el tanque (si es necesario)
+  
+  // Aquí puedes publicar un mensaje en el topic MQTT "DID/STOP"
+  client.publish("DID/STOP", "1");
+}
+
+var client = mqtt.connect('mqtt://192.168.68.109');
+
+client.on('connect', function () {
+  console.log('Connected to MQTT broker');
+  mqttConnected = true;
+  updateMqttStatus(mqttConnected); // Actualiza el estado en la interfaz
+});
+
+client.on('close', function () {
+  console.log('Disconnected from MQTT broker');
+  mqttConnected = false;
+  updateMqttStatus(mqttConnected); // Actualiza el estado en la interfaz
+});
+
+</script>
+</body>
+</html>
