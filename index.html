@@ -24,11 +24,10 @@
     <button onclick="startTank()">START</button>
     <button onclick="stopTank()">STOP</button>
   </div>
-  <div id="mqttStatus"></div> <!-- Nuevo elemento para mostrar el estado de MQTT -->
+  <div id="statusMessage"></div> <!-- Agregado: aquí se mostrará el mensaje de conexión -->
 </div>
 <script>
 var level = 0;
-var mqttConnected = false; // Variable para rastrear el estado de la conexión MQTT
 
 function setLevel() {
   var newLevel = parseInt(document.getElementById("levelInput").value);
@@ -59,17 +58,6 @@ function updateLeds() {
   }
 }
 
-function updateMqttStatus(status) {
-  var mqttStatusElement = document.getElementById("mqttStatus");
-  if (status) {
-    mqttStatusElement.textContent = "MQTT Connected";
-    mqttStatusElement.style.color = "green";
-  } else {
-    mqttStatusElement.textContent = "MQTT Disconnected";
-    mqttStatusElement.style.color = "red";
-  }
-}
-
 function startTank() {
   // Lógica para iniciar el tanque (si es necesario)
   
@@ -84,18 +72,17 @@ function stopTank() {
   client.publish("DID/STOP", "1");
 }
 
-var client = mqtt.connect('mqtt://192.168.68.109');
+// Configurar la conexión MQTT
+var client = mqtt.connect('mqtt:192.168.68.109'); // Cambia por tu broker MQTT
 
 client.on('connect', function () {
   console.log('Connected to MQTT broker');
-  mqttConnected = true;
-  updateMqttStatus(mqttConnected); // Actualiza el estado en la interfaz
+  document.getElementById("statusMessage").textContent = 'Connected to MQTT broker'; // Agregado: mensaje en la interfaz
 });
 
-client.on('close', function () {
-  console.log('Disconnected from MQTT broker');
-  mqttConnected = false;
-  updateMqttStatus(mqttConnected); // Actualiza el estado en la interfaz
+client.on('error', function (error) {
+  console.log('Connection to MQTT broker failed:', error);
+  document.getElementById("statusMessage").textContent = 'Connection to MQTT broker failed'; // Agregado: mensaje en la interfaz
 });
 
 </script>
